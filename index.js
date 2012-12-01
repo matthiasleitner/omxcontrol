@@ -39,6 +39,11 @@ omx.start = function(fn) {
     if (!pipe) {
         pipe = 'omxcontrol';
         exec('mkfifo '+pipe);
+    } else {
+        console.log("Pipe already exists! Restarting...");
+        omx.stop(function () {
+            return omx.start(fn);
+        });
     }
     if (map) {
         map(fn,cb);
@@ -54,6 +59,22 @@ omx.start = function(fn) {
         exec('echo . > '+pipe);
     }
 };
+
+omx.stop = function(cb) {
+    if (!pipe) {
+        cb();
+        return;
+    }
+    console.log('killing omxplayer..');
+    wasKilled = true;
+    exec('rm '+pipe, function () {
+        pipe = false;
+
+        exec('killall omxplayer.bin', cb);
+        
+    });
+};
+
 
 omx.sendKey = function(key) {
     if (!pipe) return;
